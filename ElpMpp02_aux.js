@@ -62,7 +62,7 @@ function compute_ElpMpp02(jd0, djd, n, LLR) {
 // indicated by the id errid
 function sanityCheck(x,inputId,message,errid) {
     var input = document.getElementById(inputId);
-    input.style.backgroundColor = "white";
+    input.style.backgroundColor = "transparent";
     if (isNaN(x)) {
         input.style.backgroundColor = "#e2a8a8";
         var text = '<p style="color:red;">'+message+'</p>';
