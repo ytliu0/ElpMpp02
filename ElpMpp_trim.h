@@ -48,7 +48,7 @@ void trim_main_coefficients(int n, int ** &i_full, double * &A_full, double Ath,
    // calculate n_trim:
    n_trim = 0;
    for (i=0; i<n; i++) {
-      if (abs(A_full[i]) > Ath) n_trim++;
+      if (fabs(A_full[i]) > Ath) n_trim++;
    }
 
    if (n_trim > 0) { 
@@ -59,7 +59,7 @@ void trim_main_coefficients(int n, int ** &i_full, double * &A_full, double Ath,
       // set coefficients 
       int j=0;
       for (i=0; i<n; i++) { 
-         if (abs(A_full[i]) > Ath) {
+         if (fabs(A_full[i]) > Ath) {
            for (k=0; k<4; k++) {
               i_trim[j][k] = i_full[i][k];
            }
@@ -79,7 +79,7 @@ void trim_main_coefficients_errorEst(int n, int ** &i_full, double * &A_full, do
    // calculate n_trim and n_drop:
    n_trim = 0; n_drop = 0;
    for (i=0; i<n; i++) {
-      if (abs(A_full[i]) > Ath) { 
+      if (fabs(A_full[i]) > Ath) { 
         n_trim++; 
       } else {
         n_drop++;
@@ -96,14 +96,14 @@ void trim_main_coefficients_errorEst(int n, int ** &i_full, double * &A_full, do
       // set coefficients
       int j=0;
       for (i=0; i<n; i++) {
-         if (abs(A_full[i]) > Ath) {
+         if (fabs(A_full[i]) > Ath) {
            for (k=0; k<4; k++) {
               i_trim[j][k] = i_full[i][k];
            }
            A_trim[j] = A_full[i];
            j++;
          } else {
-           absmax += abs(A_full[i]);
+           absmax += fabs(A_full[i]);
            sqsum += A_full[i]*A_full[i];
          }
       }
@@ -118,7 +118,7 @@ void trim_main_coefficients_errorEst(int n, int ** &i_full, double * &A_full, do
       // set coefficients
       int j=0;
       for (i=0; i<n; i++) {
-         if (abs(A_full[i]) <= Ath) {
+         if (fabs(A_full[i]) <= Ath) {
            for (k=0; k<4; k++) {
               i_drop[j][k] = i_full[i][k];
            }
@@ -137,7 +137,7 @@ void trim_pert_coefficients(int n, int ** &i_full, double * &A_full, double * &p
    // calculate n_trim:
    n_trim = 0;
    for (i=0; i<n; i++) {
-      if (abs(A_full[i]) > Ath) n_trim++;
+      if (fabs(A_full[i]) > Ath) n_trim++;
    }
 
    if (n_trim > 0) {
@@ -149,7 +149,7 @@ void trim_pert_coefficients(int n, int ** &i_full, double * &A_full, double * &p
       // set coefficients
       int j=0;
       for (i=0; i<n; i++) {
-         if (abs(A_full[i]) > Ath) {
+         if (fabs(A_full[i]) > Ath) {
            for (k=0; k<13; k++) {
               i_trim[j][k] = i_full[i][k];
            }
@@ -172,7 +172,7 @@ void trim_pert_coefficients_errorEst(int n, int ** &i_full, double * &A_full,
    n_trim = 0;
    n_drop = 0;
    for (i=0; i<n; i++) {
-      if (abs(A_full[i]) > Ath) { 
+      if (fabs(A_full[i]) > Ath) { 
         n_trim++;
       } else {
         n_drop++;
@@ -190,7 +190,7 @@ void trim_pert_coefficients_errorEst(int n, int ** &i_full, double * &A_full,
       // set coefficients
       int j=0;
       for (i=0; i<n; i++) {
-         if (abs(A_full[i]) > Ath) {
+         if (fabs(A_full[i]) > Ath) {
            for (k=0; k<13; k++) {
               i_trim[j][k] = i_full[i][k];
            }
@@ -198,7 +198,7 @@ void trim_pert_coefficients_errorEst(int n, int ** &i_full, double * &A_full,
            ph_trim[j] = ph_full[i];
            j++;
          } else {
-           absmax += abs(A_full[i]);
+           absmax += fabs(A_full[i]);
            sqsum += A_full[i]*A_full[i];
          }
       }
@@ -214,7 +214,7 @@ void trim_pert_coefficients_errorEst(int n, int ** &i_full, double * &A_full,
       // set coefficients
       int j=0;
       for (i=0; i<n; i++) {
-         if (abs(A_full[i]) <= Ath) {
+         if (fabs(A_full[i]) <= Ath) {
            for (k=0; k<13; k++) {
               i_drop[j][k] = i_full[i][k];
            }
@@ -300,7 +300,7 @@ void trim_Elp_coefs_errorEst(Elp_coefs &coefs, Elp_coefs &coefs_trim, Elp_coefs 
                     double T1, double T2, devStats &stats) {
    double tau2 = tau*tau;
    double tau3 = tau*tau2;
-   double Tmax = abs(T2) > abs(T1) ? abs(T2):abs(T1);
+   double Tmax = fabs(T2) > fabs(T1) ? fabs(T2):fabs(T1);
    double f1 = (pow(T2,3) - pow(T1,3))/(6.0*(T2-T1));
    double f2 = 0.1*(pow(T2,5) - pow(T1,5))/(T2-T1);
    double f3 = (pow(T2,7) - pow(T1,7))/(14.0*(T2-T1));
@@ -526,9 +526,9 @@ void error_est(Elp_coefs &coefs_drop, Elp_paras &paras,
   for (int i=0; i<n; i++) {
     double T = rand()*dT/RAND_MAX + T1;
     calculate_dVUr(T, paras, coefs_drop, dlong,dlat,ddist);
-    errStats.absmax_long = abs(dlong) > errStats.absmax_long ?  abs(dlong):errStats.absmax_long;
-    errStats.absmax_lat = abs(dlat) > errStats.absmax_lat ?  abs(dlat):errStats.absmax_lat;
-    errStats.absmax_dist = abs(ddist) > errStats.absmax_dist ?  abs(ddist):errStats.absmax_dist;
+    errStats.absmax_long = fabs(dlong) > errStats.absmax_long ?  fabs(dlong):errStats.absmax_long;
+    errStats.absmax_lat = fabs(dlat) > errStats.absmax_lat ?  fabs(dlat):errStats.absmax_lat;
+    errStats.absmax_dist = fabs(ddist) > errStats.absmax_dist ?  fabs(ddist):errStats.absmax_dist;
     errStats.rms_long += dlong*dlong;
     errStats.rms_lat += dlat*dlat;
     errStats.rms_dist += ddist*ddist;

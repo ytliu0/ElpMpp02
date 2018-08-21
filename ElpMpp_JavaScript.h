@@ -121,7 +121,7 @@ void write_perturbation_function(ostream &fin, int n, int ** &i_pert, double * &
        } else {
          fin << " - ";
        }
-       fin << abs(ph_pert[i]);
+       fin << fabs(ph_pert[i]);
      }
      fin << ");" << endl;
   }
@@ -588,7 +588,7 @@ void write_perturbation_function_min(ostream &fin, int n, int ** &i_pert, double
        } else {
          fin << "-";
        }
-       fin << abs(ph_pert[i]);
+       fin << fabs(ph_pert[i]);
      }
      fin << ");";
   }
