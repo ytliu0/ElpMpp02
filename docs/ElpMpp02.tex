@@ -607,7 +607,56 @@ close for the cases considered.
 
 Note that the accuracy is estimated by comparing the truncated series to 
 the full series. One might want to compare the truncated series to other 
-data such as JPL's ephemerides.
+data such as JPL's ephemerides. The Monye Carlo subroutine can be modified 
+to make that comparison. 
+In the following, I show results of comparison between the truncated series and 
+JPL's DE406 and DE431 in the time intervals $-50 < T <10$. 
+
+\vskip 0.5cm
+In all cases, $\tau=50$, $T_1=-50$, $T_2=10$ and parameters fitted to DE405/DE406 are
+used. The series is now compared to JPL's DE406 using Monte Carlo method with 
+$n=10000$. The case with $A_{\rm th}^{(U)}=A_{\rm th}^{(V)}=A_{\rm th}^{(r)}=0$ 
+is the untruncated series.
+
+\begin{tabular}{cccccccccc}
+\hline
+  $A_{\rm th}^{(U)}$ & $A_{\rm th}^{(V)}$ & $A_{\rm th}^{(r)}$ & $N$ &
+  $\Delta V_{\rm max}$ & $rms(\Delta V)$ & $\Delta U_{\rm max}$ & $rms(\Delta U)$
+  & $\Delta r_{\rm max}$ & $rms(\Delta r)$ \\
+\hline
+  $30''$ & $30''$ & 100~km & 42 & $230''$ & $47''$ & $150''$ & $34''$ & 370~km &
+86~km \\
+  $10''$ & $10''$ & 20~km & 69 & $97''$ & $21''$ & $100''$ & $19''$ & 150~km &
+31~km \\
+  $1''$ & $1''$ & 2~km & 187 & $15''$ & $2.9''$ & $14''$ & $2.4''$ & 17~km &
+4.3~km \\
+  $0.001''$ & $0.001''$ & 0.1~km & 3759 & $3.5''$ & $0.56''$ & $0.59''$ & $0.10''$ &
+  2.6~km & 0.46~km \\
+  0 & 0 & 0 & 35901 & $3.5''$ & $0.56''$ & $0.59''$ & $0.10''$ & 1.3~km & 0.19~km \\
+\hline
+\end{tabular}
+
+\vskip 0.5cm
+Same as the previous table but the comparison is to JPL's DE431.
+
+\begin{tabular}{cccccccccc}
+\hline
+  $A_{\rm th}^{(U)}$ & $A_{\rm th}^{(V)}$ & $A_{\rm th}^{(r)}$ & $N$ &
+  $\Delta V_{\rm max}$ & $rms(\Delta V)$ & $\Delta U_{\rm max}$ & $rms(\Delta U)$
+  & $\Delta r_{\rm max}$ & $rms(\Delta r)$ \\
+\hline
+  $30''$ & $30''$ & 100~km & 42 & $240''$ & $48''$ & $150''$ & $34''$ & 340~km &
+86~km \\
+  $10''$ & $10''$ & 20~km & 69 & $100''$ & $21''$ & $99''$ & $19''$ & 150~km &
+31~km \\
+  $1''$ & $1''$ & 2~km & 187 & $19''$ & $3.7''$ & $18''$ & $2.4''$ & 17~km &
+4.3~km \\
+  $0.001''$ & $0.001''$ & 0.1~km & 3759 & $12.5''$ & $2.5''$ & $1.5''$ & $0.33''$ &
+  3.4~km & 0.53~km \\
+  0 & 0 & 0 & 35901 & $12.5''$ & $2.5''$ & $1.5''$ & $0.33''$ &
+  2.6~km & 0.33~km \\
+\hline
+\end{tabular}
 
 \subsection{Saving the Truncated Series}
 
