@@ -462,8 +462,6 @@ void calculate_dVUr(double T,  Elp_paras &paras, Elp_coefs &coefs_drop,
               double &dV, double &dU, double &dr) {
   double T2 = T*T;
   double T3 = T*T2;
-  double T4 = T2*T2;
-  double T5 = T2*T3;
   Elp_args args;
   compute_Elp_arguments(T, paras, args);
 

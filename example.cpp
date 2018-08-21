@@ -1,7 +1,6 @@
 #include "ElpMpp02.h"
 
 int main() {
-   Elp_args args;
    Elp_facs facs; 
    Elp_paras paras;
    Elp_coefs coefs;
