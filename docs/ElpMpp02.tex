@@ -248,7 +248,7 @@ f_A A_{\{ i \}} + \sum\limits_{j=1}^5 f_{Bj} B_{j\{ i \}} & \mbox{ for distance}
 \eeqn
 where $f_A$ and $f_{Bj}$ ($j=1,2,3,4,5$) are the paremeters described in the previous 
 subsection. They are grouped together in the struct {\tt Elp\_facs} in {\tt ElpMpp02.h}. 
-Note that $B_{6 \{i \}}$ are not used in the calculation. In additional, the amplitudes
+Note that $B_{6 \{i \}}$ are not used in the calculation. In addition, the amplitudes
 $A_{\{ i \}}$ for longitude and latitude are in arcseconds in the original data 
 files. I converted them to radians in the files {\tt elp\_main.long} and 
 {\tt elp\_main.lat}.
@@ -358,7 +358,7 @@ where $r_{a0}=a_0({\rm DE405})/a_0({\rm ELP}) = 384747.961370173/384747.98067431
 The rectrangular coordinates $X$, $Y$, $Z$ with respect to the mean ecliptic and equinox 
 of J2000.0 are given by
 \beq
-\left( \begin{array}{c} X \\ Y \\ Z\end{array}\right)
+\left( \begin{array}{c} X \\ Y \\ Z\end{array}\right) = 
   \left( \begin{array}{ccc} 
 1-2P^2 & 2PQ & 2P\sqrt{1-P^2-Q^2} \\ 
 2PQ & 1-2Q^2 & -2Q\sqrt{1-P^2-Q^2} \\ 
@@ -477,7 +477,7 @@ deviations between the full and truncated series are
 \eeqn
 where $T_{\rm max} = {\rm max}(|T_1|, |T_2|)$. These estimated deviations are 
 very conservative because 
-in general the phases in the terms are difference and the terms do not have the same sign. 
+in general the phases in the terms are different and the terms do not have the same sign. 
 Root mean square deviations may provide better estimates of typical deviations at any 
 given time between $T_1$ and $T_2$: 
 \beq
@@ -515,7 +515,7 @@ are then estimated according to the equations
 \beqn
   \Delta q_{\rm max} &\approx& {\rm max}(|\Delta q_1|, |\Delta q_2|, \cdots, |\Delta q_n|) 
 \label{eq:DeltaqmaxMC} \\
-  rms(\Delta q) &\approx & = \sqrt{ \frac{1}{n}\sum_{i=0}^n (\Delta q_i)^2 } ,
+  rms(\Delta q) &\approx & \sqrt{ \frac{1}{n}\sum_{i=0}^n (\Delta q_i)^2 } ,
 \label{DeltaqrmsMC}
 \eeqn
 where 
@@ -557,7 +557,7 @@ The following are examples of error estimates computed from the two subroutines.
 \vskip 0.5cm
 In all cases, $\tau=50$, $T_1=-50$, $T_2=10$ and parameters fitted to DE405/DE406 are 
 used. $N$ is the 
-number of terms in the truncated Elp/MPP02 series. $\Delta q_{\rm max}$ 
+number of terms in the truncated ELP/MPP02 series. $\Delta q_{\rm max}$ 
 and $rms(\Delta q)$ ($q=V,U,r$) are computed from equations~(\ref{eq:DeltaVmax}), 
 (\ref{eq:DeltaUmax}), (\ref{eq:Deltarmax}) and (\ref{eq:rmsDeltaq}). 
 
