@@ -1,4 +1,4 @@
-#include "ElpMpp_trim.h"
+#include "ElpMpp_trim.cpp"
 
 using namespace std;
 
@@ -44,7 +44,7 @@ int main()
   printf("Maximum possible error in geocentric distance = %f km\n",stats.absmax_dist);
   printf("Estimated root mean square error in geocentric distance = %f km\n\n",stats.rms_dist);
 
-  char outfile[] = "ElpMpp02C.h";
+  char outfile[] = "ElpMpp02C.cpp";
   char dataFileSuffix[] = "C";
   generate_cpp_code(outfile, dataFileSuffix, 
                     corr, AthU, AthV, AthR, tau, paras);

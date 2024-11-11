@@ -1,4 +1,4 @@
-#include "ElpMpp_JavaScript.h"
+#include "ElpMpp_JavaScript.cpp"
 
 int main() {
   const double sec = 3.14159265358979323846/648000;
