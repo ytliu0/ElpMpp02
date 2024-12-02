@@ -55,7 +55,8 @@ function compute_ElpMpp02(jd0, djd, n, LLR, v) {
             moon.Z.toFixed(5) + (v==0 ? '</td>':'<br />'+moon.Zdot.toFixed(5)+'</td>') + '</tr>';
     }
     txt += '</table> <br />';
-    txt += "<p>X, Y, Z are the geocentric coordinates of the Moon with respect to the mean ecliptic and equinox of J2000.0; Vx, Vy, Vz are components of Moon's velocity.</p>";
+    txt += '<p>X, Y, Z are the geocentric coordinates of the Moon with respect to the mean ecliptic and equinox of J2000.0'; 
+    txt += (v==0 ? '.':"; Vx, Vy, Vz are components of Moon's velocity.") + '</p>';
     txt += '<p>Times are in barycentric dynamical time (TDB).</p>';
     res.innerHTML = txt;
 }
