@@ -541,13 +541,9 @@ void error_est(Elp_coefs &coefs_drop, Elp_paras &paras,
   errStats.rms_dist = sqrt(errStats.rms_dist/n);
 }
 
-// Generate a C++ code that computes the Moon's position using the truncated 
-// ELP/MPP02 series. The C++ code will be outputted to the file specified by outfile. 
-// The parameter dataFileSuffix must be exactly the same as the one in output_data_files().
-void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr, 
-                       double AthU, double AthV, double AthR, double tau, 
-                       Elp_paras &paras) {
-     ofstream fin(outfile);
+// Generate cpp code: Print header, define structs and the functioon mod2pi()
+void generate_cpp_code_header(ofstream &fin, const char *dataFileSuffix, int corr, 
+                              double AthU, double AthV, double AthR, double tau) {
      fin << "// ----------------------------------------------------------------" << endl;
      fin << "//  This code computes a truncated ELP/MPP02 series. " << endl;
      fin << "//" << endl;
@@ -589,7 +585,8 @@ void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr
      fin << "//       Elp_coefs." << endl;
      fin << "//    2. Call getX2000() to compute the rectangular geocentric coordinates" << endl;
      fin << "//       of the Moon's position with respect to the mean ecliptic and" << endl;
-     fin << "//       equinox of J2000.0." << endl;
+     fin << "//       equinox of J2000.0 or getX2000_Xdot2000() if Moon's velocity" << endl;
+     fin << "//       is required." << endl;
      fin << "// ---------------------------------------------------------------- " << endl;
      fin << endl;
      fin << "#include <cmath>" << endl;
@@ -639,6 +636,10 @@ void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr
      fin << "  return x - tpi*floor((x + PI)/tpi);" << endl;
      fin << "}" << endl;
      fin << "" << endl;
+}
+
+// Generate C++ code: read data files
+void generate_cpp_code_read_files(ofstream &fin) {
      fin << "// Read main problem file" << endl;
      fin << "// n is the number of terms in the series, which is stored in the" << endl;
      fin << "//   first line of the data file" << endl;
@@ -699,6 +700,10 @@ void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr
      fin << "  file.close();" << endl;
      fin << "}" << endl;
      fin << "" << endl;
+}
+
+// Generate C++ code: setup_Elp_coefs
+void generate_cpp_code_setup_Elp_coefs(ofstream &fin, const char *dataFileSuffix) {
      fin << "// set up coefficients for the ELP/MPP02 series" << endl;
      fin << "void setup_Elp_coefs(Elp_coefs &coefs) {" << endl;
      fin << "  string infile;" << endl;
@@ -754,6 +759,10 @@ void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr
      fin << "                         coefs.A_pert_distT3, coefs.ph_pert_distT3);" << endl;
      fin << "}" << endl;
      fin << "" << endl;
+}
+
+// Generate C++ code: compute_Elp_arguments
+void generate_cpp_code_compute_Elp_arguments(ofstream &fin, Elp_paras &paras) {
      fin << "// Compute the lunar and planetary arguments used in the ELP/MPP02 series" << endl;
      fin << "void compute_Elp_arguments(double T, Elp_args &args) {" << endl;
      fin << "  double T2 = T*T;" << endl;
@@ -872,6 +881,75 @@ void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr
      fin << "  args.Ne = mod2pi(Ne);" << endl;
      fin << "}" << endl;
      fin << "" << endl;
+}
+
+// Generate C++ code: Compute the time derivatives of the lunar and planetary arguments
+void generate_cpp_code_compute_Elp_arguments_dot(ofstream &fin, Elp_paras &paras) {
+     fin << "// Compute the time derivatives of the lunar and planetary arguments used in the ELP/MPP02 series" << endl;
+     fin << "// return the time derivatives in units of rad/day" << endl;
+     fin << "void compute_Elp_arguments_dot(double T, Elp_args &args_dot) {" << endl;
+     fin << "  double T2 = T*T;" << endl;
+     fin << "  double T3 = T*T2;" << endl;
+     const double fac = PI/648000.0/36525; // arcsecs -> radians/cy
+     
+     double w11 = (1732559343.73604 + paras.Dw1_1)*fac;
+     double w12 = (-6.8084 + paras.Dw1_2)*2*fac;
+     double w13 = (0.006604 + paras.Dw1_3)*3*fac;
+     double w14 = (-3.169e-5 + paras.Dw1_4)*4*fac;
+     fin << "  double W1 = " << setprecision(17) << w11 << w12 << "*T + " << w13 
+         << "*T2 " << w14 << "*T3;" << endl;
+
+     double w21 = (14643420.3171 + paras.Dw2_1 + paras.Cw2_1)*fac;
+     double w22 = (-38.2631 + paras.Dw2_2)*2*fac;
+     double w23 = (-0.045047+ paras.Dw2_3)*3*fac;
+     double w24 = 0.00021301*4*fac;
+     fin << "  double W2 = " << setprecision(17) << w21 << w22 << "*T" << w23 << "*T2 + " 
+         << w24 << "*T3;" << endl;
+
+     double w31 = (-6967919.5383 + paras.Dw3_1 + paras.Cw3_1)*fac;
+     double w32 = (6.359 + paras.Dw3_2)*2*fac;
+     double w33 = (0.007625 + paras.Dw3_3)*3*fac;
+     double w34 = -3.586e-5*4*fac;
+     fin << "  double W3 = " << setprecision(17) << w31 << " + " << w32 << "*T + " 
+         << w33 << "*T2 " << w34 << "*T3;" << endl;
+
+     double Ea1 = (129597742.293 + paras.Deart_1)*fac;
+     double Ea2 = -0.0202*2*fac;
+     double Ea3 = 9e-6*3*fac;
+     double Ea4 = 1.5e-7*4*fac;
+     fin << "  double Ea = " << setprecision(17) << Ea1 << Ea2 << "*T + " << Ea3 
+         << "*T2 + " << Ea4 << "*T3;" << endl;
+
+     double p1 = 1161.24342*fac;
+     double p2 = 0.529265*2*fac;
+     double p3 = -1.1814e-4*3*fac;
+     double p4 = 1.1379e-5*4*fac;
+     fin << "  double pomp = " << setprecision(17) << p1 << " + " << p2 << "*T "
+         << p3 << "*T2 + " << p4 << "*T3;" << endl << endl;
+     
+     fin << "  // Mean longitude of the Moon" << endl;
+     fin << "  args_dot.W1 = W1;" << endl;
+     fin << "  // Arguments of Delaunay" << endl;
+     fin << "  args_dot.D = W1-Ea;" << endl;
+     fin << "  args_dot.F = W1-W3;" << endl;
+     fin << "  args_dot.L = W1-W2;" << endl;
+     fin << "  args_dot.Lp = Ea-pomp;" << endl << endl;
+     fin << "  // zeta" << endl;
+     fin << "  args_dot.zeta = W1 + " << 5028.79695*fac << ";" << endl << endl;
+     fin << "  // Planetary arguments (mean longitudes and mean motions)" << endl;
+     fin << "  args_dot.Me = " << setprecision(17) << 538101628.66888*fac << ";" << endl;
+     fin << "  args_dot.Ve = " << setprecision(17) << 210664136.45777*fac << ";" << endl;
+     fin << "  args_dot.EM = " << setprecision(17) << 129597742.293*fac << ";" << endl;
+     fin << "  args_dot.Ma = " << setprecision(17) << 68905077.65936*fac << ";" << endl;
+     fin << "  args_dot.Ju = " << setprecision(17) << 10925660.57335*fac << ";" << endl;
+     fin << "  args_dot.Sa = " << setprecision(17) << 4399609.33632*fac << ";" << endl; 
+     fin << "  args_dot.Ur = " << setprecision(17) << 1542482.57845*fac << ";" << endl;
+     fin << "  args_dot.Ne = " << setprecision(17) << 786547.897*fac << ";" << endl;
+     fin << "}" << endl << endl;
+}
+
+// Generate C++ code: Sum the ELP/MPP02 series for the main problem
+void generate_cpp_code_Elp_main_sum(ofstream &fin) {
      fin << "// Sum the ELP/MPP02 series for the main problem" << endl;
      fin << "// dist = 0: sine series; dist != 0: cosine series" << endl;
      fin << "double Elp_main_sum(int n, int ** &i_main, double * &A_main, Elp_args &args, int dist) {" << endl;
@@ -896,6 +974,10 @@ void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr
      fin << "    return sum;" << endl;
      fin << "}" << endl;
      fin << "" << endl;
+}
+
+// Generate a C++ code: Sum the ELP/MPP02 series for perturbations
+void generate_cpp_code_Elp_perturbation_sum(ofstream &fin) {
      fin << "// Sum the ELP/MPP02 series for perturbations" << endl;
      fin << "double Elp_perturbation_sum(int n, int ** &i_pert, double * &A_pert, double * &ph_pert," << endl;
      fin << "                            Elp_args &args) {" << endl;
@@ -913,6 +995,70 @@ void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr
      fin << "    return sum;" << endl;
      fin << "}" << endl;
      fin << "" << endl;
+}
+
+// Generate C++ code: Sum the ELP/MPP02 series and its time derivative for the main problem
+void generate_cpp_code_Elp_main_sum_and_derv(ofstream &fin) {
+     fin << "// Sum the ELP/MPP02 series and its time derivative for the main problem" << endl;
+     fin << "// dist = 0: sine series; dist != 0: cosine series" << endl;
+     fin << "void Elp_main_sum_and_derv(int n, int ** &i_main, double * &A_main, Elp_args &args, Elp_args &args_dot, int dist, double &sum, double &sum_dot) {" << endl;
+     fin << "    int i;" << endl;
+     fin << "    sum = 0.0; sum_dot = 0.0;" << endl;
+     fin << "    double phase, phase_dot;" << endl;
+     fin << "    if (dist==0) {" << endl;
+     fin << "       // sine series " << endl;
+     fin << "       for (i=0; i<n; i++) {" << endl;
+     fin << "          phase = i_main[i][0]*args.D + i_main[i][1]*args.F + i_main[i][2]*args.L + " << endl;
+     fin << "                  i_main[i][3]*args.Lp;" << endl;
+     fin << "          phase_dot = i_main[i][0]*args_dot.D + i_main[i][1]*args_dot.F + i_main[i][2]*args_dot.L + " << endl;
+     fin << "                  i_main[i][3]*args_dot.Lp;" << endl;
+     fin << "          sum += A_main[i]*sin(phase);" << endl;
+     fin << "          sum_dot += A_main[i]*cos(phase)*phase_dot;" << endl;
+     fin << "       }" << endl;
+     fin << "    } else {" << endl;
+     fin << "       // cosine series" << endl;
+     fin << "       for (i=0; i<n; i++) {" << endl;
+     fin << "          phase = i_main[i][0]*args.D + i_main[i][1]*args.F + i_main[i][2]*args.L +" << endl;
+     fin << "                  i_main[i][3]*args.Lp;" << endl;
+     fin << "          phase_dot = i_main[i][0]*args_dot.D + i_main[i][1]*args_dot.F + i_main[i][2]*args_dot.L +" << endl;
+     fin << "                  i_main[i][3]*args_dot.Lp;" << endl;
+     fin << "          sum += A_main[i]*cos(phase);" << endl;
+     fin << "          sum_dot -= A_main[i]*sin(phase)*phase_dot;" << endl;
+     fin << "       }" << endl;
+     fin << "    }" << endl;
+     fin << "}" << endl;
+     fin << "" << endl;
+}
+
+// Generate a C++ code: Sum the ELP/MPP02 series and its time derivative for perturbations
+void generate_cpp_code_Elp_perturbation_sum_and_derv(ofstream &fin) {
+     fin << "// Sum the ELP/MPP02 series and its time derivative for perturbations" << endl;
+     fin << "void Elp_perturbation_sum_and_derv(int n, int ** &i_pert, double * &A_pert, double * &ph_pert," << endl;
+     fin << "                            Elp_args &args, Elp_args &args_dot, double &sum, double &sum_dot) {" << endl;
+     fin << "    int i;" << endl;
+     fin << "    sum = 0.0; sum_dot = 0;" << endl;
+     fin << "    double phase, phase_dot;" << endl;
+     fin << "    for (i=0; i<n; i++) {" << endl;
+     fin << "       phase = ph_pert[i] + i_pert[i][0]*args.D + i_pert[i][1]*args.F + " << endl;
+     fin << "               i_pert[i][2]*args.L + i_pert[i][3]*args.Lp + i_pert[i][4]*args.Me + " << endl;
+     fin << "               i_pert[i][5]*args.Ve + i_pert[i][6]*args.EM + i_pert[i][7]*args.Ma + " << endl;
+     fin << "               i_pert[i][8]*args.Ju + i_pert[i][9]*args.Sa + i_pert[i][10]*args.Ur +" << endl;
+     fin << "               i_pert[i][11]*args.Ne + i_pert[i][12]*args.zeta;" << endl;
+     fin << "        phase_dot = i_pert[i][0]*args_dot.D + i_pert[i][1]*args_dot.F +" << endl;
+     fin << "               i_pert[i][2]*args_dot.L + i_pert[i][3]*args_dot.Lp + i_pert[i][4]*args_dot.Me +" << endl;
+     fin << "               i_pert[i][5]*args_dot.Ve + i_pert[i][6]*args_dot.EM + i_pert[i][7]*args_dot.Ma +" << endl;
+     fin << "               i_pert[i][8]*args_dot.Ju + i_pert[i][9]*args_dot.Sa + i_pert[i][10]*args_dot.Ur +" << endl;
+     fin << "               i_pert[i][11]*args_dot.Ne + i_pert[i][12]*args_dot.zeta;" << endl;
+     fin << "       sum += A_pert[i]*sin(phase);" << endl;
+     fin << "       sum_dot += A_pert[i]*cos(phase)*phase_dot;" << endl;
+     fin << "    }" << endl;
+     fin << "}" << endl;
+     fin << "" << endl;
+}
+
+// Generate C++ code: Calculate the Moon's geocentric X,Y,Z coordinates with respect to J2000.0 
+// mean ecliptic and equinox
+void generate_cpp_code_getX2000(ofstream &fin) {
      fin << "// Calculate the Moon's geocentric X,Y,Z coordinates with respect to " << endl;
      fin << "// J2000.0 mean ecliptic and equinox." << endl;
      fin << "// T is the TDB Julian century from J2000.0 = (TBD JD - 2451545)/36525" << endl;
@@ -990,7 +1136,153 @@ void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr
      fin << "  X = p11*x0 + p12*y0 + p13*z0;" << endl;
      fin << "  Y = p21*x0 + p22*y0 + p23*z0;" << endl;
      fin << "  Z = p31*x0 + p32*y0 + p33*z0;" << endl;
-     fin << "}" << endl;
+     fin << "}" << endl << endl;
+}
+
+// Generate C++ code: Calculate the Moon's geocentric X,Y,Z coordinates and their time derivatives
+// with respect to J2000.0 mean ecliptic and equinox.
+void generate_cpp_code_getX2000_Xdot2000(ofstream &fin) {
+     fin << "// Calculate the Moon's geocentric X,Y,Z coordinates and their time derivatives" << endl;
+     fin << "// with respect to J2000.0 mean ecliptic and equinox." << endl;
+     fin << "// T is the TDB Julian century from J2000.0 = (TBD JD - 2451545)/36525" << endl;
+     fin << "// Xvec[0] = X, Xvec[1] = Y, Xvec[2] = Z, Xvec[3] = Xdot, Xvec[4] = Ydot, Xvec[5] = Zdot" << endl;
+     fin << "void getX2000_Xdot2000(double T, Elp_coefs &coefs, double (&Xvec)[6]) {" << endl;
+     fin << "  double T2 = T*T;" << endl;
+     fin << "  double T3 = T*T2;" << endl;
+     fin << "  double T4 = T2*T2;" << endl;
+     fin << "  double T5 = T2*T3;" << endl;
+     fin << "  const double fac = " << setprecision(17) << 1.0/36525 << ";" << endl;
+     fin << "  Elp_args args, args_dot;" << endl;
+     fin << "  compute_Elp_arguments(T, args);" << endl;
+     fin << "  compute_Elp_arguments_dot(T, args_dot);" << endl << endl;
+     fin << "  // Sum the ELP/MPP02 series" << endl;
+     fin << "  // main problem series" << endl;
+     fin << "  double main_long, main_long_dot, main_lat, main_lat_dot, main_dist, main_dist_dot;" << endl;
+     fin << "  Elp_main_sum_and_derv(coefs.n_main_long, coefs.i_main_long, " << endl;
+     fin << "                        coefs.A_main_long, args, args_dot, 0, main_long, main_long_dot);" << endl;
+     fin << "  Elp_main_sum_and_derv(coefs.n_main_lat, coefs.i_main_lat," << endl;
+     fin << "                        coefs.A_main_lat, args, args_dot, 0, main_lat, main_lat_dot);" << endl;
+     fin << "  Elp_main_sum_and_derv(coefs.n_main_dist, coefs.i_main_dist," << endl;
+     fin << "                        coefs.A_main_dist, args, args_dot, 1, main_dist, main_dist_dot);" << endl;
+     fin << "  // perturbation, longitude" << endl;
+     fin << "  double pert_longT0, pert_longT0_dot, pert_longT1, pert_longT1_dot," << endl;
+     fin << "         pert_longT2, pert_longT2_dot, pert_longT3, pert_longT3_dot;" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_longT0, coefs.i_pert_longT0, " << endl;
+     fin << "                                coefs.A_pert_longT0, coefs.ph_pert_longT0," << endl;
+     fin << "                                args, args_dot, pert_longT0, pert_longT0_dot);" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_longT1, coefs.i_pert_longT1," << endl;
+     fin << "                                coefs.A_pert_longT1, coefs.ph_pert_longT1," << endl;
+     fin << "                                args, args_dot, pert_longT1, pert_longT1_dot);" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_longT2, coefs.i_pert_longT2," << endl;
+     fin << "                                coefs.A_pert_longT2, coefs.ph_pert_longT2," << endl;
+     fin << "                                args, args_dot, pert_longT2, pert_longT2_dot);" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_longT3, coefs.i_pert_longT3," << endl;
+     fin << "                                coefs.A_pert_longT3, coefs.ph_pert_longT3," << endl;
+     fin << "                                args, args_dot, pert_longT3, pert_longT3_dot);" << endl;
+     fin << "  // perturbation, latitude" << endl;
+     fin << "  double pert_latT0, pert_latT0_dot, pert_latT1, pert_latT1_dot, pert_latT2, pert_latT2_dot;" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_latT0, coefs.i_pert_latT0," << endl;
+     fin << "                                coefs.A_pert_latT0, coefs.ph_pert_latT0," << endl;
+     fin << "                                args, args_dot, pert_latT0, pert_latT0_dot);" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_latT1, coefs.i_pert_latT1," << endl;
+     fin << "                                coefs.A_pert_latT1, coefs.ph_pert_latT1," << endl;
+     fin << "                                args, args_dot, pert_latT1, pert_latT1_dot);" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_latT2, coefs.i_pert_latT2," << endl;
+     fin << "                                coefs.A_pert_latT2, coefs.ph_pert_latT2," << endl;
+     fin << "                                args, args_dot, pert_latT2, pert_latT2_dot);" << endl;
+     fin << "  // perturbation, distance" << endl;
+     fin << "  double pert_distT0, pert_distT0_dot, pert_distT1, pert_distT1_dot," << endl;
+     fin << "         pert_distT2, pert_distT2_dot, pert_distT3, pert_distT3_dot;" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_distT0, coefs.i_pert_distT0," << endl;
+     fin << "                                coefs.A_pert_distT0, coefs.ph_pert_distT0," << endl;
+     fin << "                                args, args_dot, pert_distT0, pert_distT0_dot);" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_distT1, coefs.i_pert_distT1," << endl;
+     fin << "                                coefs.A_pert_distT1, coefs.ph_pert_distT1," << endl;
+     fin << "                                args, args_dot, pert_distT1, pert_distT1_dot);" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_distT2, coefs.i_pert_distT2," << endl;
+     fin << "                                coefs.A_pert_distT2, coefs.ph_pert_distT2," << endl;
+     fin << "                                args, args_dot, pert_distT2, pert_distT2_dot);" << endl;
+     fin << "  Elp_perturbation_sum_and_derv(coefs.n_pert_distT3, coefs.i_pert_distT3," << endl;
+     fin << "                                coefs.A_pert_distT3, coefs.ph_pert_distT3," << endl;
+     fin << "                                args, args_dot, pert_distT3, pert_distT3_dot);" << endl << endl;
+     fin << "  // Moon's longitude, latitude, distance and their time derivatives" << endl;
+     fin << "  double longM = args.W1 + main_long + pert_longT0 + mod2pi(pert_longT1*T) + " << endl;
+     fin << "                 mod2pi(pert_longT2*T2) + mod2pi(pert_longT3*T3);" << endl;
+     fin << "  double latM  = main_lat + pert_latT0 + mod2pi(pert_latT1*T) + mod2pi(pert_latT2*T2);" << endl;
+     fin << "  // ra0 = a0(DE405)/a0(ELP) = 384747.961370173/384747.980674318 = 0.99999994982652041." << endl;
+     fin << "  double r = " << setprecision(17) << 384747.961370173/384747.980674318 
+         << "*(main_dist +  pert_distT0 + pert_distT1*T + pert_distT2*T2 + pert_distT3*T3);" 
+         << endl;
+     fin << "  double longM_dot = args_dot.W1 + main_long_dot + pert_longT0_dot + pert_longT1_dot*T +" << endl;
+     fin << "                     pert_longT2_dot*T2 + pert_longT3_dot*T3 +" << endl;
+     fin << "                     fac*(pert_longT1 + 2*T*pert_longT2 + 3*T2*pert_longT3);" << endl;
+     fin << "  double latM_dot = main_lat_dot + pert_latT0_dot + pert_latT1_dot*T + pert_latT2_dot*T2 +" << endl;
+     fin << "                    fac*(pert_latT1 + 2*T*pert_latT2);" << endl;
+     fin << "  double r_dot = " << setprecision(17) << 384747.961370173/384747.980674318 
+         << "*(main_dist_dot +  pert_distT0_dot + pert_distT1_dot*T +" << endl;
+     fin << "                      pert_distT2_dot*T2 + pert_distT3_dot*T3 + fac*(pert_distT1 +" << endl;
+     fin << "                      2*T*pert_distT2 + 3*T2*pert_distT3) );" << endl;
+     fin << "  double cV = cos(longM), sV = sin(longM), cU = cos(latM), sU = sin(latM);" << endl;
+     fin << "  double x0 = r*cV*cU, y0 = r*sV*cU, z0 = r*sU;" << endl;
+     fin << "  double x0_dot = r_dot*cV*cU - r*sV*cU*longM_dot - r*cV*sU*latM_dot;" << endl;
+     fin << "  double y0_dot = r_dot*sV*cU + r*cV*cU*longM_dot - r*sV*sU*latM_dot;" << endl;
+     fin << "  double z0_dot = r_dot*sU + r*cU*latM_dot;" << endl << endl;
+     fin << "  // Precession matrix and its time derivative" << endl;
+     fin << "  double P = 0.10180391e-4*T + 0.47020439e-6*T2 - 0.5417367e-9*T3 " << endl;
+     fin << "             - 0.2507948e-11*T4 + 0.463486e-14*T5;" << endl;
+     fin << "  double Q = -0.113469002e-3*T + 0.12372674e-6*T2 + 0.12654170e-8*T3 " << endl;
+     fin << "             - 0.1371808e-11*T4 - 0.320334e-14*T5;" << endl;
+     fin << "  double sq = sqrt(1 - P*P - Q*Q);" << endl;
+     fin << "  double p11 = 1 - 2*P*P;" << endl;
+     fin << "  double p12 = 2*P*Q;" << endl;
+     fin << "  double p13 = 2*P*sq;" << endl;
+     fin << "  double p21 = p12;" << endl;
+     fin << "  double p22 = 1-2*Q*Q;" << endl;
+     fin << "  double p23 = -2*Q*sq;" << endl;
+     fin << "  double p31 = -p13;" << endl;
+     fin << "  double p32 = -p23;" << endl;
+     fin << "  double p33 = 1 - 2*P*P - 2*Q*Q;" << endl;
+     fin << "  double P_dot = fac*(0.10180391e-4 + 0.94040878e-6*T - 1.6252101e-9*T2" << endl;
+     fin << "             - 1.0031792e-11*T3 + 2.31743e-14*T4);" << endl;
+     fin << "  double Q_dot = fac*(-0.113469002e-3 + 0.24745348e-6*T + 0.3796251e-8*T2" << endl;
+     fin << "                - 0.5487232e-11*T3 - 1.60167e-14*T4);" << endl;
+     fin << "  double sq_dot = -(P*P_dot + Q*Q_dot)/sq;" << endl;
+     fin << "  double p11_dot = -4*P*P_dot;" << endl;
+     fin << "  double p12_dot = 2*(P_dot*Q + P*Q_dot);" << endl;
+     fin << "  double p13_dot = 2*(P_dot*sq + P*sq_dot);" << endl;
+     fin << "  double p21_dot = p12_dot;" << endl;
+     fin << "  double p22_dot = -4*Q*Q_dot;" << endl;
+     fin << "  double p23_dot = -2*(Q_dot*sq + Q*sq_dot);" << endl;
+     fin << "  double p31_dot = -p13_dot;" << endl;
+     fin << "  double p32_dot = -p23_dot;" << endl;
+     fin << "  double p33_dot = p11_dot + p22_dot;" << endl << endl;
+     fin << "  // Finally, components of position and velocity vector wrt J2000.0 mean ecliptic and equinox" << endl;
+     fin << "  Xvec[0] = p11*x0 + p12*y0 + p13*z0;" << endl;
+     fin << "  Xvec[1] = p21*x0 + p22*y0 + p23*z0;" << endl;
+     fin << "  Xvec[2] = p31*x0 + p32*y0 + p33*z0;" << endl;
+     fin << "  Xvec[3] = p11*x0_dot + p12*y0_dot + p13*z0_dot + p11_dot*x0 + p12_dot*y0 + p13_dot*z0;" << endl;
+     fin << "  Xvec[4] = p21*x0_dot + p22*y0_dot + p23*z0_dot + p21_dot*x0 + p22_dot*y0 + p23_dot*z0;" << endl;
+     fin << "  Xvec[5] = p31*x0_dot + p32*y0_dot + p33*z0_dot + p31_dot*x0 + p32_dot*y0 + p33_dot*z0;" << endl;
+     fin << "}" << endl << endl;
+}
+// Generate a C++ code that computes the Moon's position using the truncated 
+// ELP/MPP02 series. The C++ code will be outputted to the file specified by outfile. 
+// The parameter dataFileSuffix must be exactly the same as the one in output_data_files().
+void generate_cpp_code(const char* outfile, const char *dataFileSuffix, int corr, 
+                       double AthU, double AthV, double AthR, double tau, 
+                       Elp_paras &paras) {
+     ofstream fin(outfile);
+     generate_cpp_code_header(fin, dataFileSuffix, corr, AthU, AthV, AthR, tau);
+     generate_cpp_code_read_files(fin);
+     generate_cpp_code_setup_Elp_coefs(fin, dataFileSuffix);
+     generate_cpp_code_compute_Elp_arguments(fin, paras);
+     generate_cpp_code_compute_Elp_arguments_dot(fin, paras);
+     generate_cpp_code_Elp_main_sum(fin);
+     generate_cpp_code_Elp_perturbation_sum(fin);
+     generate_cpp_code_Elp_main_sum_and_derv(fin);
+     generate_cpp_code_Elp_perturbation_sum_and_derv(fin);
+     generate_cpp_code_getX2000(fin);
+     generate_cpp_code_getX2000_Xdot2000(fin);
      fin.close();
 }
 
@@ -998,7 +1290,7 @@ void write_main_problem_file(const char *outfile, int &n, int ** &i_main, double
      ofstream fin(outfile);
      fin << n << endl;
      for (int i=0; i<n; i++) {
-        fin << i_main[i][0] << "  " << i_main[i][1] << "  " << i_main[i][2] 
+        fin << i_main[i][0] << "  " << i_main[i][1] << "  " << i_main[i][2]
             << "  " << i_main[i][3] << "  " << setprecision(17) << A_main[i] << endl;
      }
      fin.close();

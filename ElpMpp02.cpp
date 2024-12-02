@@ -35,8 +35,8 @@
 //       Elp_coefs.
 //    4. Call getX2000() to compute the rectangular geocentric coordinates 
 //       of the Moon's position with respect to the mean ecliptic and 
-//       equinox of J2000.0 or getX2000_Xdot2000() if time derivatives 
-//       are required.
+//       equinox of J2000.0 or getX2000_Xdot2000() if Moon's velocity 
+//       is required.
 // 
 //  See example.cpp for an example of using this code.
 //---------------------------------------------------------------- 
@@ -681,7 +681,7 @@ void getX2000_Xdot2000(double T,  Elp_paras &paras, Elp_coefs &coefs, double (&X
   double p32_dot = -p23_dot;
   double p33_dot = p11_dot + p22_dot;
 
-  // Finally, components of position and vector vector wrt J2000.0 mean ecliptic and equinox
+  // Finally, components of position and velocity vector wrt J2000.0 mean ecliptic and equinox
   Xvec[0] = p11*x0 + p12*y0 + p13*z0;
   Xvec[1] = p21*x0 + p22*y0 + p23*z0;
   Xvec[2] = p31*x0 + p32*y0 + p33*z0;
