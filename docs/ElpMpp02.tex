@@ -12,7 +12,7 @@
 \begin{document}
 \title{ELP/MPP02 Lunar Ephemeris}
 \author{Yuk Tung Liu}
-\date{2018-08-14, last modified: 2024-12-01}
+\date{2018-08-14, last modified: 2024-12-03}
 \maketitle
 
 ELP/MPP02 is a semi-analytic solution for the lunar motion developed by 
@@ -673,16 +673,14 @@ The two main subroutines are \\
                        double AthU, double AthV, double AthR, double tau,
                        Elp\_paras \&paras, Elp\_coefs \&coefs, const char* funSuffix)} \\
 and \\
-{\tt generate\_javascript\_code\_min(const char* outfile, int corr,
-                       double AthU, double AthV, double AthR, double tau,
+{\tt generate\_javascript\_code\_min(const char* outfile, 
                        Elp\_paras \&paras, Elp\_coefs \&coefs, const char *funSuffix)}\\
 If Moon's velocity is also needed, call these two subroutines instead:\\
 {\tt generate\_javascript\_code\_with\_velocity(const char* outfile, int corr,
                        double AthU, double AthV, double AthR, double tau,
                        Elp\_paras \&paras, Elp\_coefs \&coefs, const char* funSuffix)} \\
 and \\
-{\tt generate\_javascript\_code\_with\_velocity\_min(const char* outfile, int corr,
-                       double AthU, double AthV, double AthR, double tau,
+{\tt generate\_javascript\_code\_with\_velocity\_min(const char* outfile, 
                        Elp\_paras \&paras, Elp\_coefs \&coefs, const char *funSuffix)}\\
 {\tt outfile} is file name of the js file that will be outputted. 
 Characters in {\tt funSuffix} will be added to every JavaScript function. 
